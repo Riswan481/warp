@@ -1,5 +1,5 @@
 #!/bin/bash
-# warp-menu.sh – by Riswan481 (modified/fixed by ChatGPT)
+# warp-menu.sh – by Riswan481 (fix & update by ChatGPT)
 
 # =============== Warna & Garis ===============
 NC='\033[0m'
@@ -9,75 +9,92 @@ RED='\033[1;31m'
 BLUE='\033[1;34m'
 LINE="========================================"
 
-# =============== Fungsi Install ===============
-function install_warp_go() {
-  echo -e "${YELLOW}📥 Mengunduh warp-go...${NC}"
-  
-  # Hapus jika ada sisa sebelumnya
-  rm -f warp-go-linux-amd64.gz warp-go
-
-  # Unduh dari rilis resmi ViRb3
-  wget -O warp-go-linux-amd64.gz https://github.com/ViRb3/warp-go/releases/latest/download/warp-go-linux-amd64.gz
-  
-  if file warp-go-linux-amd64.gz | grep -q "gzip compressed"; then
-    gunzip warp-go-linux-amd64.gz
-    chmod +x warp-go-linux-amd64
-    mv warp-go-linux-amd64 /usr/bin/warp-go
+# =============== Cek & Install warp-go ===============
+function check_warp_go() {
+  if [[ ! -f /usr/bin/warp-go ]]; then
+    echo -e "${RED}⚠️ warp-go rusak atau belum diinstall${NC}"
+    echo -e "${YELLOW}📥 Mengunduh warp-go...${NC}"
+    wget -O warp-go.tar.gz "https://github.com/Riswan481/warp/releases/download/1.0.8/warp-go_1.0.8_linux_amd64.tar.gz"
+    if [[ $? -ne 0 ]]; then
+      echo -e "${RED}❌ Gagal mengunduh file warp-go!${NC}"
+      exit 1
+    fi
+    tar -xzf warp-go.tar.gz
+    mv warp-go /usr/bin/warp-go
+    chmod +x /usr/bin/warp-go
+    rm -f warp-go.tar.gz
     echo -e "${GREEN}✅ warp-go berhasil diinstall ke /usr/bin/warp-go${NC}"
-  else
-    echo -e "${RED}❌ File yang diunduh bukan file gzip valid!${NC}"
-    exit 1
   fi
 }
 
-function cek_warp_go() {
-  if [[ ! -f /usr/bin/warp-go ]] || ! /usr/bin/warp-go --version &>/dev/null; then
-    echo -e "${YELLOW}⚠️ warp-go rusak atau belum diinstall${NC}"
-    install_warp_go
-  fi
-}
-
-function aktifkan_warp() {
-  echo -e "${YELLOW}🚀 Mengaktifkan WARP...${NC}"
-  /usr/bin/warp-go --accept-tos --register --connect
-  if [[ $? -eq 0 ]]; then
-    echo -e "${GREEN}✅ WARP berhasil diaktifkan!${NC}"
-  else
-    echo -e "${RED}❌ Gagal mengaktifkan WARP${NC}"
-  fi
-}
-
-function nonaktifkan_warp() {
-  echo -e "${YELLOW}🛑 Menonaktifkan WARP...${NC}"
-  pkill warp-go && echo -e "${GREEN}✅ WARP dinonaktifkan${NC}" || echo -e "${RED}❌ Gagal menonaktifkan WARP${NC}"
-}
-
-function cek_status_warp() {
-  echo -e "${YELLOW}📈 Mengecek status WARP...${NC}"
-  if pgrep warp-go >/dev/null; then
-    echo -e "${GREEN}✅ WARP sedang AKTIF${NC}"
-  else
-    echo -e "${RED}❌ WARP sedang NONAKTIF${NC}"
-  fi
-}
-
-# =============== MENU ===============
-cek_warp_go
-while true; do
+# =============== Menu ===============
+function show_menu() {
+  clear
   echo -e "$LINE"
-  echo -e "${BLUE}     🔧 WARP MENU – Riswan481${NC}"
+  echo -e "     🔧 ${BLUE}WARP MENU – Riswan481${NC}"
   echo -e "$LINE"
   echo -e "1. 🔓 Aktifkan WARP"
   echo -e "2. 🔒 Nonaktifkan WARP"
   echo -e "3. 📈 Cek Status WARP"
-  echo -e "0. ❌  Keluar"
-  echo -n "Pilih opsi: "; read opsi
+  echo -e "4. 📜 Pasang Lisensi WARP+"
+  echo -e "5. 📋 Lihat Device Info"
+  echo -e "6. 📤 Export WireGuard Config"
+  echo -e "7. ❌ Reset Konfigurasi"
+  echo -e "0. ❎ Keluar"
+  echo -ne "\nPilih opsi: "
+  read -r opsi
 
   case $opsi in
-    1) aktifkan_warp ;;
-    2) nonaktifkan_warp ;;
-    3) cek_status_warp ;;
-    0) echo -e "${YELLOW}👋 Keluar...${NC}"; exit ;;
-    *) echo -e "${RED}❌ Opsi tidak valid!${NC}" ;;
+    1)
+      echo -e "${YELLOW}🚀 Mengaktifkan WARP...${NC}"
+      nohup warp-go -config warp.conf > /dev/null 2>&1 &
+      sleep 1
+      echo -e "${GREEN}✅ WARP aktif!${NC}"
+      ;;
+    2)
+      echo -e "${YELLOW}🛑 Menonaktifkan WARP...${NC}"
+      pkill -f warp-go
+      echo -e "${GREEN}✅ WARP dinonaktifkan${NC}"
+      ;;
+    3)
+      echo -e "${BLUE}📡 Status WARP:${NC}"
+      curl -s https://www.cloudflare.com/cdn-cgi/trace | grep warp
+      ;;
+    4)
+      echo -ne "${YELLOW}🔑 Masukkan lisensi WARP+: ${NC}"
+      read -r LICENSE
+      warp-go -license "$LICENSE" -update
+      echo -e "${GREEN}✅ Lisensi berhasil dipasang${NC}"
+      ;;
+    5)
+      echo -e "${BLUE}📋 Device Info:${NC}"
+      warp-go -update
+      ;;
+    6)
+      echo -e "${YELLOW}📤 Mengekspor konfigurasi WireGuard...${NC}"
+      warp-go -export-wireguard warp.conf
+      echo -e "${GREEN}✅ Berhasil diexport ke warp.conf${NC}"
+      ;;
+    7)
+      echo -e "${RED}⚠️ Mereset konfigurasi...${NC}"
+      pkill -f warp-go
+      rm -f warp.conf
+      warp-go -register
+      echo -e "${GREEN}✅ Konfigurasi baru dibuat${NC}"
+      ;;
+    0)
+      exit 0
+      ;;
+    *)
+      echo -e "${RED}❌ Opsi tidak valid!${NC}"
+      ;;
   esac
-done
+
+  echo ""
+  read -n 1 -s -r -p "Tekan tombol apapun untuk kembali ke menu..."
+  show_menu
+}
+
+# =============== Eksekusi ===============
+check_warp_go
+show_menu
