@@ -17,49 +17,45 @@ function install_warp_go() {
     aarch64) FILE="warp-go_arm64" ;;
     *) echo -e "${RED}❌ Arsitektur tidak didukung: $ARCH${NC}"; exit 1 ;;
   esac
-
-  URL="https://github.com/fscarmen/warp/releases/latest/download/${FILE}"
-  curl -L --retry 5 --retry-connrefused -A "Mozilla/5.0" -o /usr/bin/warp-go "$URL"
-  if ! file /usr/bin/warp-go | grep -q ELF; then
-    echo -e "${RED}❌ Download gagal, file bukan binary${NC}"
-    rm -f /usr/bin/warp-go
-    exit 1
-  fi
-
+  curl -fsSL -A "Mozilla/5.0" -o /usr/bin/warp-go \
+    "https://github.com/fscarmen/warp/releases/latest/download/${FILE}" || {
+      echo -e "${RED}❌ Gagal mengunduh warp-go${NC}"
+      exit 1
+  }
   chmod +x /usr/bin/warp-go
-  echo -e "${GREEN}✅ warp‑go sudah terpasang di /usr/bin/warp‑go${NC}"
+  echo -e "${GREEN}✅ warp-go berhasil diinstall ke /usr/bin/warp-go${NC}"
 }
 
-# =============== Fungsi WARP ===============
+# =============== Fungsi Warp ===============
 function start_warp() {
-  echo -e "${YELLOW}🚀 Mengaktifkan WARP…${NC}"
-  /usr/bin/warp-go --platform linux --register && \
-  /usr/bin/warp-go --generate && \
-  /usr/bin/warp-go --up && \
+  echo -e "${YELLOW}🚀 Mengaktifkan WARP...${NC}"
+  warp-go --platform linux --register && \
+  warp-go --generate && \
+  warp-go --up && \
   echo -e "${GREEN}✅ WARP aktif!${NC}" || \
-  echo -e "${RED}❌ Gagal aktifkan WARP${NC}"
+  echo -e "${RED}❌ Gagal mengaktifkan WARP${NC}"
   sleep 2
 }
 
 function stop_warp() {
-  echo -e "${YELLOW}🛑 Menonaktifkan WARP…${NC}"
-  /usr/bin/warp-go --remove && echo -e "${GREEN}✅ WARP dinonaktifkan${NC}" || echo -e "${RED}❌ Gagal nonaktifkan WARP${NC}"
+  echo -e "${YELLOW}🛑 Menonaktifkan WARP...${NC}"
+  warp-go --remove && echo -e "${GREEN}✅ WARP dinonaktifkan${NC}" || echo -e "${RED}❌ Gagal menonaktifkan WARP${NC}"
   sleep 2
 }
 
 function status_warp() {
-  echo -e "${YELLOW}📊 Status WARP…${NC}"
-  /usr/bin/warp-go --status || echo -e "${RED}❌ warp‑go belum aktif atau belum terpasang${NC}"
+  echo -e "${YELLOW}📊 Status WARP...${NC}"
+  warp-go --status || echo -e "${RED}❌ warp-go tidak aktif atau belum diinstall${NC}"
   sleep 2
 }
 
-# Check apakah warp-go valid
+# =============== Cek warp-go valid ===============
 if [[ ! -x /usr/bin/warp-go ]] || file /usr/bin/warp-go | grep -q HTML; then
-  echo -e "${RED}⚠️ warp-go rusak atau belum terinstall${NC}"
+  echo -e "${RED}⚠️ warp-go rusak atau belum diinstall${NC}"
   install_warp_go
 fi
 
-# =============== Menu Utama ===============
+# =============== Menu ===============
 while true; do
   echo -e "\n$LINE"
   echo -e "${GREEN}     🔧 WARP MENU – Riswan481${NC}"
