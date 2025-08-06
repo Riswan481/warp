@@ -49,8 +49,20 @@ stop_warp() {
 
 status_warp() {
   if [[ -f "$WARP_GO" ]]; then
-    echo -e "${BLUE}📊 Status WARP:${NC}"
-    $WARP_GO -status
+    echo -e "${BLUE}📊 Mengecek Status WARP...${NC}"
+    STATUS_OUTPUT="$($WARP_GO -status)"
+    echo "$STATUS_OUTPUT"
+
+    if echo "$STATUS_OUTPUT" | grep -q "Status: off"; then
+      echo -e "${YELLOW}⚠️ WARP sedang OFF. Aktifkan sekarang? (y/n)${NC}"
+      read -rp "Jawaban: " jawab
+      if [[ "$jawab" == "y" || "$jawab" == "Y" ]]; then
+        $WARP_GO -start
+        echo -e "${GREEN}✅ WARP telah diaktifkan!${NC}"
+      else
+        echo -e "${RED}❌ WARP tetap nonaktif.${NC}"
+      fi
+    fi
   else
     echo -e "${RED}❌ warp-go belum terinstal!${NC}"
   fi
@@ -80,7 +92,7 @@ while true; do
   echo -e "2. Daftar warp-go"
   echo -e "3. Aktifkan WARP"
   echo -e "4. Nonaktifkan WARP"
-  echo -e "5. Cek Status"
+  echo -e "5. Cek Status WARP"
   echo -e "6. Export Config"
   echo -e "7. Hapus warp-go"
   echo -e "0. Keluar"
