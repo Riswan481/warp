@@ -5,5 +5,5 @@ Menu installer interaktif **warp-go** untuk Cloudflare WARP pada Linux (x86_64 a
 ## Cara Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Riswan481/warp/main/warp-menu.sh | bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Riswan481/warp/main/warp-menu.sh)
 ```
